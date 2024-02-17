@@ -1,0 +1,13 @@
+/libpff-20231205
+/libpff-alpha-20231205.tar.gz
+/venv
+/.chainlit
+/model
+/__pycache__
+.files
+*.gguf
+*.pst
+/data
+*.jpg
+/*.env
+/*.log

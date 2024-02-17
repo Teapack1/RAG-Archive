@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG question answer bot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: black;
+            font-family: 'Poppins', sans-serif;
+            color: white;
+        }
+        .chat-container {
+            max-width: 800px;
+            margin: 50px auto;
+            margin-top: 10%;
+            padding: 20px;
+            background-color: #333;
+            border-radius: 10px;
+        }
+        .chat-heading {
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #ffd700; /* Golden color for the heading */
+        }
+        .chat-input {
+            margin-top: 20px; /* Added margin */
+            margin-bottom: 20px;
+            height: 100px; /* Increased height */
+        }
+        .chat-button {
+            background-color: green;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1.2em;
+        }
+        .chat-response {
+            background-color: #444;
+            padding: 15px;
+            border-radius: 5px;
+            min-height: 100px; /* Minimum height for the response box */
+            margin-top: 20px;
+        }
+        .accordion {
+
+            background-color: #444;
+            border-radius: 5px;
+        }
+        .accordion-button {
+            color: white;
+            background-color: #555;
+        }
+        .accordion-body {
+            color: white; /* Improved visibility of text */
+        }
+        pre {
+            white-space:pre-wrap;
+        }
+        #exampleQueries {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        #exampleQueries button {
+            margin-right: 10px;
+            margin-bottom: 5px;
+        }
+
+
+        /* The switch - the box around the slider */
+        
+        .language-toggle {
+           text-align: right;
+            margin: 16px;
+            position: relative; /* Added position relative to align the label */
+        }
+
+        .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        }
+
+        /* The slider */
+        .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+        }
+
+        .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        }
+
+        input:checked + .slider {
+        background-color: #2196F3;
+        }
+
+        input:focus + .slider {
+        box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked + .slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(26px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+        border-radius: 34px;
+        }
+
+        .slider.round:before {
+        border-radius: 50%;
+        }
+
+    </style>
+
+</head>
+<body>
+    <div class="container chat-container">
+        <h1 class="chat-heading">RAG Search</h1>
+
+
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="retriever-tab" data-bs-toggle="tab" data-bs-target="#retriever" type="button" role="tab" aria-controls="retriever" aria-selected="true">Retriever</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="ingest-tab" data-bs-toggle="tab" data-bs-target="#ingest" type="button" role="tab" aria-controls="ingest" aria-selected="false">Ingest</button>
+            </li>
+        </ul>
+
+
+        <!-- Language Toggle Switch -->
+        <!-- Tab Content -->
+        <div class="tab-content" id="myTabContent">
+            <!-- Retriever Tab Pane -->
+            <div class="tab-pane fade show active" id="retriever" role="tabpanel" aria-labelledby="retriever-tab">
+                <!-- Language Toggle Switch -->
+                <div class="language-toggle">
+                    <label class="switch">
+                        <input type="checkbox" class="languageCheckbox"> <!-- Changed to class -->
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="languageLabel">English</span> <!-- Changed to class -->
+                </div>
+                
+        <div class="accordion" id="appDescriptionAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="descriptionHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDescription" aria-expanded="true" aria-controls="collapseDescription">
+                        About This App
+                    </button>
+                </h2>
+
+                <div id="collapseDescription" class="accordion-collapse collapse" aria-labelledby="descriptionHeading" data-bs-parent="#appDescriptionAccordion">
+                    <div class="accordion-body text-dark">
+                        This is a RAG implementation using Open Source stack. Intel's Neural Chat has been used to build this app along with BGE Embeddings as an embedding model, Chroma DB as a vector store, and Langchain & CTransformers as an orchestration frameworks.
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Example Queries Section -->
+        <div id="exampleQueries" class="mb-3">
+            <h2 class="h5">Try Example Queries:</h2>
+            <button class="btn btn-sm btn-secondary example-query">What cable can you use to hang a pendant light on?</button>
+            <button class="btn btn-sm btn-secondary example-query">What is the minimal gauge of live wires ?</button>
+            <button class="btn btn-sm btn-secondary example-query">What flamability fequirements do plastic enclosure have to meet ?</button>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <textarea id="userInput" class="form-control chat-input" placeholder="Type your query here..."></textarea>
+                <button id="submitBtn" class="btn chat-button">Submit</button>
+                <div id="response" class="chat-response"></div>
+            </div>
+        </div>
+    </div>
+
+
+
+                <!-- Ingest Tab Pane -->
+                <div class="tab-pane fade" id="ingest" role="tabpanel" aria-labelledby="ingest-tab">
+                        <!-- Language Toggle Switch -->
+                        <div class="language-toggle">
+                            <label class="switch">
+                                <input type="checkbox" class="languageCheckbox"> <!-- Changed to class -->
+                                <span class="slider round"></span>
+                            </label>
+                            <span class="languageLabel">English</span> <!-- Changed to class -->
+                        </div>
+
+                    <!-- Ingest Content -->
+                    <h2>Document Ingestion</h2>
+                    <input type="text" id="folderPath" class="form-control my-2" placeholder="Enter the path to your data folder" />
+                    <button id="ingestBtn" class="btn chat-button">Ingest</button>
+                    <div id="ingestResponse" class="chat-response"></div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Function to update language labels and synchronize toggle states
+        function updateLanguageTogglesAndLabels(checked) {
+            document.querySelectorAll('.languageCheckbox').forEach(function(checkbox) {
+                checkbox.checked = checked; // Synchronize toggle state
+            });
+            document.querySelectorAll('.languageLabel').forEach(function(label) {
+                label.textContent = checked ? "Czech" : "English"; // Update all labels
+            });
+        }
+
+        // Attach event listeners to all language toggle switches
+        document.querySelectorAll('.languageCheckbox').forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                updateLanguageTogglesAndLabels(this.checked);
+            });
+        });
+
+        document.getElementById('submitBtn').addEventListener('click', async function() {
+            var userInput = document.getElementById('userInput').value;
+            
+            var languageCheckbox = document.querySelector('.languageCheckbox').checked;   
+            var language = languageCheckbox ? "czech" : "english";
+            document.getElementById('response').innerHTML = '<p>Processing...</p>';
+            const formData = new FormData();
+            formData.append('query', userInput);
+            formData.append('language', language);
+
+            try {
+                const response = await fetch('/get_response', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                document.getElementById('response').innerHTML = `<p>${data.answer}</p><br><pre><b>Context: </b> ${data.source_document}</pre><br><pre><b>Source Document: </b> ${data.doc}</pre>`;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('response').innerHTML = '<p>Error processing your request</p>';
+            }
+        });
+
+        // Add event listeners to example queries
+        document.querySelectorAll('.example-query').forEach(item => {
+            item.addEventListener('click', function() {
+                document.getElementById('userInput').value = this.textContent; // Insert clicked query into textarea
+            });
+        });
+
+        // Ingest data
+        document.getElementById('ingestBtn').addEventListener('click', async function() {
+            var folderPath = document.getElementById('folderPath').value;
+            var languageCheckbox = document.querySelector('.languageCheckbox').checked;
+            var language = languageCheckbox ? "czech" : "english"; // Determine the language based on the checkbox
+            document.getElementById('ingestResponse').innerHTML = '<p>Starting ingestion...</p>';
+            try {
+                const response = await fetch('/ingest_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `folderPath=${folderPath}&language=${language}` // Include the language in the request body
+                });
+        
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+        
+                const data = await response.json();
+                document.getElementById('ingestResponse').innerHTML = `<p>${data.message}</p>`;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('ingestResponse').innerHTML = '<p>Error during ingestion process</p>';
+            }
+        });
+    </script>
+</body>
+</html>
