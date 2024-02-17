@@ -13,3 +13,4 @@ libpff-python
 openai
 tiktoken
 frontend
+pysqlite3-binary
