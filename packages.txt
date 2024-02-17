@@ -1,1 +1,3 @@
 sqlite3
+libsqlite3-dev
+php5-sqlite3
