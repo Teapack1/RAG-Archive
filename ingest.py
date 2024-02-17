@@ -20,6 +20,8 @@ class Ingest:
         english_store="stores/english_512",
         data_czech="data/czech",
         data_english="data/english",
+        english_embedding_model="text-embedding-3-large",
+        czech_embedding_model="Seznam/simcse-dist-mpnet-paracrawl-cs-en",
     ):
         self.openai_api_key = openai_api_key
         self.chunk = chunk
@@ -28,17 +30,20 @@ class Ingest:
         self.english_store = english_store
         self.data_czech = data_czech
         self.data_english = data_english
+        self.english_embedding_model = english_embedding_model
+        self.czech_embedding_model = czech_embedding_model
 
     def ingest_english(self):
 
         embedding = OpenAIEmbeddings(
             openai_api_key=self.openai_api_key,
-            model="text-embedding-3-large",
+            model=self.english_embedding_model,
         )
 
         loader = DirectoryLoader(
             self.data_english,
             show_progress=True,
+            loader_cls=PyPDFLoader,
         )
 
         documents = loader.load()
@@ -58,7 +63,7 @@ class Ingest:
         print("\n English vector Store Created.......\n\n")
 
     def ingest_czech(self):
-        embedding_model = "Seznam/simcse-dist-mpnet-paracrawl-cs-en"
+        embedding_model = self.czech_embedding_model
         model_kwargs = {"device": "cpu"}
         encode_kwargs = {"normalize_embeddings": False}
         embedding = HuggingFaceEmbeddings(

@@ -1,8 +1,8 @@
 ---
-title: IoT Flask Webserver
-emoji: 📟
-colorFrom: blue
-colorTo: indigo
+title: RAG Retriever Eng Czech
+emoji: 📚
+colorFrom: yellow
+colorTo: gray
 sdk: gradio
 sdk_version: 2.9.1
 python_version: 3.10.4

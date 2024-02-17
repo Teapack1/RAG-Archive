@@ -39,35 +39,61 @@ if openai_api_key is None:
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
+english_embedding_model="text-embedding-3-large"
+czech_embedding_model="Seznam/simcse-dist-mpnet-paracrawl-cs-en"
 
 czech_store = "stores/czech_512"
-english_store = "stores/english_256"
+english_store = "stores/english_512"
 
 ingestor = Ingest(
     openai_api_key=openai_api_key,
-    chunk=256,
-    overlap=128,
+    chunk=512,
+    overlap=256,
     czech_store=czech_store,
     english_store=english_store,
+    czech_embedding_model=czech_embedding_model,
+    english_embedding_model=english_embedding_model,
 )
 
-load_dotenv()
+def prompt_en():
+    prompt_template_en = """You are electrical engineer and you answer users ###Question.
 
-prompt_template = """You are a electrical engineer focused on lighting and chandeliers. Provide helpful answer to the user question.
-If you don't know the answer, just say that you don't know, don't try to make up an answer.
+    #Your answer has to be helpful, relevant and closely related to the user's ###Question.
+    #Provide as much literal information and transcription from the #Context as possible. 
+    #Only use your own words to connect, clarify or explain the information!
+    #If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
-Context: {context}
-Question: {question}
+    ###Context: {context}
+    ###Question: {question}
 
-Only return the helpful answer below and nothing else.
-Helpful answer:
-"""
+    Only return the helpful answer below and nothing else.
+    Helpful answer:
+    """
+    prompt_en = PromptTemplate(
+        template=prompt_template_en, input_variables=["context", "question"]
+    )
+    print("\n Prompt ready... \n\n")
+    return prompt_en
 
-prompt = PromptTemplate(
-    template=prompt_template, input_variables=["context", "question"]
-)
+def prompt_cz():
+    prompt_template_cz = """Jste elektroinženýr a odpovídáte uživatelům na ###Otázku.
 
-print("\n Prompt ready... \n\n")
+    #Vaše odpověď musí být užitečná, relevantní a úzce souviset s uživatelovou ###Otázkou.
+    #Poskytněte co nejvíce doslovných informací a přepisů z #Kontextu.
+    #Použijte vlastní slova pouze pro spojení, objasnění nebo vysvětlení informací!
+    #Pokud odpověď neznáte, prostě řekněte, že to nevíte, nepokoušejte se vymýšlet odpověď.
+
+    ###Kontext: {context}
+    ###Otázka: {question}
+
+    Níže vraťte pouze užitečnou odpověď a nic jiného.
+    Užitečná odpověď:
+    """
+    prompt_cz = PromptTemplate(
+        template=prompt_template_cz, input_variables=["context", "question"]
+    )
+    print("\n Prompt ready... \n\n")
+    return prompt_cz
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -96,8 +122,9 @@ async def ingest_data(folderPath: str = Form(...), language: str = Form(...)):
 async def get_response(query: str = Form(...), language: str = Form(...)):
     print(language)
     if language == "czech":
+        prompt = prompt_cz()
         print("\n Czech language selected....\n\n")
-        embedding_model = "Seznam/simcse-dist-mpnet-paracrawl-cs-en"
+        embedding_model = czech_embedding_model
         persist_directory = czech_store
         model_name = embedding_model
         model_kwargs = {"device": "cpu"}
@@ -108,8 +135,9 @@ async def get_response(query: str = Form(...), language: str = Form(...)):
             encode_kwargs=encode_kwargs,
         )
     else:
+        prompt = prompt_en()
         print("\n English language selected....\n\n")
-        embedding_model = "text-embedding-3-large"  # Default to English
+        embedding_model = english_embedding_model  # Default to English
         persist_directory = english_store
         embedding = OpenAIEmbeddings(
             openai_api_key=openai_api_key,
@@ -117,7 +145,7 @@ async def get_response(query: str = Form(...), language: str = Form(...)):
         )
 
     vectordb = Chroma(persist_directory=persist_directory, embedding_function=embedding)
-    retriever = vectordb.as_retriever(search_kwargs={"k": 10})
+    retriever = vectordb.as_retriever(search_kwargs={"k": 3})
 
     chain_type_kwargs = {"prompt": prompt}
     qa_chain = RetrievalQA.from_chain_type(
