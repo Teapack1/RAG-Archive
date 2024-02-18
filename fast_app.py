@@ -26,7 +26,7 @@ from ingest import Ingest
 # if huggingface_token is None:
 #    raise ValueError("Hugging Face token is not set in environment variables.")
 
-openai_api_key = "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"
+openai_api_key = os.getenv("OPENAI_API")
 if openai_api_key is None:
     raise ValueError("OAI token is not set in environment variables.")
 
