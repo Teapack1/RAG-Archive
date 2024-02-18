@@ -13,8 +13,6 @@ sentence_transformers
 chromadb
 pytesseract
 fitz
-#libpff-python
 openai
 tiktoken
 frontend
-chainlit

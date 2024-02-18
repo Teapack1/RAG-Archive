@@ -15,7 +15,6 @@ from langchain.chains import RetrievalQA
 from langchain.llms import OpenAI
 from langchain import PromptTemplate
 from langchain.embeddings import OpenAIEmbeddings, HuggingFaceEmbeddings
-import chainlit as cl
 
 from ingest import Ingest
 
@@ -26,7 +25,7 @@ from ingest import Ingest
 # if huggingface_token is None:
 #    raise ValueError("Hugging Face token is not set in environment variables.")
 
-openai_api_key = os.getenv("OPENAI_API")
+openai_api_key = os.getenv("OPENAI_API_KEY")
 if openai_api_key is None:
     raise ValueError("OAI token is not set in environment variables.")
 
