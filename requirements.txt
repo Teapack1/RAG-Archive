@@ -16,3 +16,4 @@ fitz
 openai
 tiktoken
 frontend
+unstructured
