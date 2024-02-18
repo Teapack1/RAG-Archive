@@ -1,4 +1,4 @@
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from langchain.document_loaders import PyPDFLoader, DirectoryLoader
@@ -53,12 +53,11 @@ class Ingest:
         )
         texts = text_splitter.split_documents(documents)
 
-        vectordb = Chroma.from_documents(
+        vectordb = FAISS.from_documents(
             documents=texts,
             embedding=embedding,
-            persist_directory=self.english_store,
-            collection_metadata={"hnsw:space": "cosine"},
         )
+        vectordb.save_local(self.english_store)
 
         print("\n English vector Store Created.......\n\n")
 
@@ -84,12 +83,11 @@ class Ingest:
         )
 
         texts = text_splitter.split_documents(documents)
-        vectordb = Chroma.from_documents(
+        vectordb = FAISS.from_documents(
             documents=texts,
             embedding=embedding,
-            persist_directory=self.czech_store,
-            collection_metadata={"hnsw:space": "cosine"},
         )
+        vectordb.save_local(self.czech_store)
 
         print("\n Czech vector Store Created.......\n\n")
 

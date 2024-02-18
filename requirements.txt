@@ -1,5 +1,9 @@
-langchain
+
+langchain-community==0.0.19
+langchain==0.1.6
 fastapi
+faiss-cpu
+pypdf
 uvicorn
 python-multipart
 ctransformers
@@ -9,8 +13,8 @@ sentence_transformers
 chromadb
 pytesseract
 fitz
-libpff-python
+#libpff-python
 openai
 tiktoken
 frontend
-pysqlite3-binary
+chainlit

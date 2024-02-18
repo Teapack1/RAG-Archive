@@ -7,20 +7,15 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.encoders import jsonable_encoder
 
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from langchain.chains import RetrievalQA
-from langchain.document_loaders import (
-    TextLoader,
-    PyPDFLoader,
-    DirectoryLoader,
-    UnstructuredFileLoader,
-)
-from langchain.document_loaders.csv_loader import CSVLoader
+
 from langchain.llms import OpenAI
 from langchain import PromptTemplate
 from langchain.embeddings import OpenAIEmbeddings, HuggingFaceEmbeddings
+import chainlit as cl
 
 from ingest import Ingest
 
@@ -31,7 +26,7 @@ from ingest import Ingest
 # if huggingface_token is None:
 #    raise ValueError("Hugging Face token is not set in environment variables.")
 
-openai_api_key = os.getenv("OPENAI_API_KEY")
+openai_api_key = "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"
 if openai_api_key is None:
     raise ValueError("OAI token is not set in environment variables.")
 
@@ -39,8 +34,8 @@ if openai_api_key is None:
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
-english_embedding_model="text-embedding-3-large"
-czech_embedding_model="Seznam/simcse-dist-mpnet-paracrawl-cs-en"
+english_embedding_model = "text-embedding-3-large"
+czech_embedding_model = "Seznam/simcse-dist-mpnet-paracrawl-cs-en"
 
 czech_store = "stores/czech_512"
 english_store = "stores/english_512"
@@ -54,6 +49,7 @@ ingestor = Ingest(
     czech_embedding_model=czech_embedding_model,
     english_embedding_model=english_embedding_model,
 )
+
 
 def prompt_en():
     prompt_template_en = """You are electrical engineer and you answer users ###Question.
@@ -74,6 +70,7 @@ def prompt_en():
     )
     print("\n Prompt ready... \n\n")
     return prompt_en
+
 
 def prompt_cz():
     prompt_template_cz = """Jste elektroinženýr a odpovídáte uživatelům na ###Otázku.
@@ -144,7 +141,7 @@ async def get_response(query: str = Form(...), language: str = Form(...)):
             model=embedding_model,
         )
 
-    vectordb = Chroma(persist_directory=persist_directory, embedding_function=embedding)
+    vectordb = FAISS.load_local(persist_directory, embedding)
     retriever = vectordb.as_retriever(search_kwargs={"k": 3})
 
     chain_type_kwargs = {"prompt": prompt}
