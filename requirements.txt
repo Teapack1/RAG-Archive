@@ -14,3 +14,4 @@ openai
 tiktoken
 frontend
 pysqlite3-binary
+unstructured
